@@ -1,0 +1,361 @@
+/* Task Grid Layout */
+.task-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 20px;
+  padding: 20px 0;
+}
+
+/* Task Card Container */
+.task-card-container {
+  animation: fadeInScale 0.6s ease-out forwards;
+  opacity: 0;
+  transform: scale(0.9);
+}
+
+.new-task-animation {
+  animation: newTaskPulse 3s ease-out;
+}
+
+/* Animations */
+@keyframes fadeInScale {
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes newTaskPulse {
+  0% {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  20% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+  40% {
+    transform: scale(1);
+  }
+  60% {
+    transform: scale(1.02);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Task Card */
+.task-card {
+  transition: all 0.3s ease;
+}
+
+.task-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+}
+
+/* Status Indicator */
+.status-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  border-radius: 16px 16px 0 0;
+}
+
+.status-indicator.todo {
+  background: linear-gradient(90deg, #ff9800, #ffb74d);
+}
+
+.status-indicator.doing {
+  background: linear-gradient(90deg, #2196f3, #64b5f6);
+}
+
+.status-indicator.done {
+  background: linear-gradient(90deg, #4caf50, #81c784);
+}
+
+/* Task Header */
+.task-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.task-title {
+  margin: 0 0 8px 0 !important;
+  color: #1f2937;
+  font-weight: 600;
+}
+
+.task-project-tag {
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  color: #6b7280;
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+.status-tag {
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-weight: 500;
+}
+
+/* Task Description */
+.task-description {
+  color: #6b7280;
+  font-size: 14px;
+  line-height: 1.5;
+  margin-bottom: 16px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Progress Section */
+.progress-section {
+  margin-bottom: 16px;
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.progress-label {
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.progress-percentage {
+  color: #1f2937;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Assignees Section */
+.assignees-section {
+  margin-bottom: 16px;
+}
+
+.assignees-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.assignees-icon {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.assignees-label {
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.assignees-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.assignee-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f9fafb;
+  padding: 4px 8px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+.assignee-avatar {
+  background: #6366f1;
+  color: white;
+  font-weight: 600;
+}
+
+.assignee-name {
+  color: #374151;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* Task Footer */
+.task-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 12px;
+  border-top: 1px solid #f3f4f6;
+}
+
+.deadline-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.deadline-icon {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.deadline-text {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.deadline-overdue {
+  color: #ef4444;
+  font-weight: 600;
+}
+
+/* Task Actions */
+.task-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.action-button {
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  height: 28px;
+  padding: 0 12px;
+}
+
+.action-button-primary {
+  background: #6366f1;
+  border-color: #6366f1;
+}
+
+.action-button-primary:hover {
+  background: #5855eb;
+  border-color: #5855eb;
+}
+
+.action-button-danger {
+  background: #ef4444;
+  border-color: #ef4444;
+}
+
+.action-button-danger:hover {
+  background: #dc2626;
+  border-color: #dc2626;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .task-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .task-grid {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+  }
+}
+
+@media (min-width: 1025px) {
+  .task-grid {
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 20px;
+  }
+}
+
+/* Additional Animations */
+.fade-in-up {
+  animation: fadeInUp 0.6s ease-out forwards;
+}
+
+.slide-in-up {
+  animation: slideInUp 0.6s ease-out forwards;
+}
+
+.fade-in-scale {
+  animation: fadeInScale 0.6s ease-out forwards;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Header Card Styles */
+.task-header-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  border-radius: 16px;
+  margin-bottom: 24px;
+  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+}
+
+/* Statistics Cards */
+.statistics-card {
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  transition: all 0.3s ease;
+}
+
+.statistics-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+}
+
+/* Progress Overview Card */
+.progress-overview-card {
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  margin-bottom: 24px;
+}
+
+/* Filters Card */
+.filters-card {
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  margin-bottom: 24px;
+}
+
+/* Task Table Card */
+.task-table-card {
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}

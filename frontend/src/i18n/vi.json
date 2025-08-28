@@ -1,0 +1,14 @@
+{
+  "login": "Đăng nhập",
+  "register": "Đăng ký",
+  "dashboard": "Bảng điều khiển",
+  "projects": "Dự án",
+  "tasks": "Công việc",
+  "members": "Thành viên",
+  "statistics": "Thống kê",
+  "calendar": "Lịch & Deadline",
+  "notifications": "Thông báo",
+  "search": "Tìm kiếm & Lọc",
+  "logout": "Đăng xuất",
+  "welcome": "Xin chào, {{name}}!"
+} 

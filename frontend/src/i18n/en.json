@@ -1,0 +1,14 @@
+{
+  "login": "Login",
+  "register": "Register",
+  "dashboard": "Dashboard",
+  "projects": "Projects",
+  "tasks": "Tasks",
+  "members": "Members",
+  "statistics": "Statistics",
+  "calendar": "Calendar & Deadline",
+  "notifications": "Notifications",
+  "search": "Search & Filter",
+  "logout": "Logout",
+  "welcome": "Welcome, {{name}}!"
+} 
