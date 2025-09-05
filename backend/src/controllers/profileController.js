@@ -1,5 +1,5 @@
 const User = require('../models/User');
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcrypt');
 
 // Lấy thông tin profile của user hiện tại
 exports.getProfile = async (req, res) => {

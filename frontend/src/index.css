@@ -26,13 +26,13 @@
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.04);
   --shadow-md: 0 4px 8px -2px rgb(99 102 241 / 0.08);
   --shadow-lg: 0 10px 24px -4px rgb(99 102 241 / 0.10);
-  --section-spacing: 32px;
-  --card-radius: 18px;
-  --card-shadow: 0 4px 16px rgba(99, 102, 241, 0.06);
-  --input-radius: 10px;
-  --input-shadow: 0 2px 8px rgba(99, 102, 241, 0.04);
-  --button-radius: 10px;
-  --button-shadow: 0 2px 8px rgba(99, 102, 241, 0.08);
+  --section-spacing: 24px;
+  --card-radius: 10px;
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --input-radius: 8px;
+  --input-shadow: none;
+  --button-radius: 8px;
+  --button-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
 }
 
 [data-theme="dark"] {
@@ -48,7 +48,7 @@
 html, body, #root {
   background: #f6f8fa;
   color: #23272f;
-  transition: background-color 0.3s, color 0.3s;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -80,28 +80,26 @@ a:hover {
 button, .ant-btn, .ant-btn-primary {
   border-radius: var(--button-radius) !important;
   box-shadow: var(--button-shadow) !important;
-  font-size: 1rem !important;
-  padding: 0.7em 1.5em !important;
+  font-size: 0.95rem !important;
+  padding: 0.6em 1.2em !important;
   background: var(--primary-color) !important;
   color: #fff !important;
   border: none !important;
-  transition: box-shadow 0.2s, transform 0.2s, background 0.2s;
+  transition: background 0.15s ease;
 }
 button:hover, .ant-btn:hover, .ant-btn-primary:hover {
   background: var(--primary-hover) !important;
-  box-shadow: 0 6px 16px rgba(99, 102, 241, 0.16) !important;
-  transform: translateY(-2px) scale(1.03);
 }
 
 input, textarea, .ant-input, .ant-input-password {
   border-radius: var(--input-radius) !important;
-  box-shadow: var(--input-shadow) !important;
-  padding: 10px 14px !important;
-  font-size: 1rem !important;
+  box-shadow: none !important;
+  padding: 10px 12px !important;
+  font-size: 0.95rem !important;
   border: 1px solid #e2e8f0 !important;
   background: #fff !important;
   color: #23272f !important;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: border-color 0.15s ease;
 }
 input:focus, textarea:focus, .ant-input:focus, .ant-input-password:focus {
   border-color: #6366f1 !important;
@@ -113,11 +111,9 @@ input:focus, textarea:focus, .ant-input:focus, .ant-input-password:focus {
   box-shadow: var(--card-shadow) !important;
   background: #fff !important;
   border: 1px solid #e2e8f0 !important;
-  transition: box-shadow 0.2s, transform 0.2s;
 }
 .card:hover, .ant-card:hover {
-  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.12) !important;
-  transform: translateY(-2px) scale(1.01);
+  box-shadow: var(--card-shadow) !important;
 }
 
 section {
@@ -148,31 +144,31 @@ section {
 .ant-pagination-item,
 .ant-pagination-prev,
 .ant-pagination-next {
-  min-width: 40px;
-  height: 40px;
-  border-radius: 12px !important;
+  min-width: 36px;
+  height: 36px;
+  border-radius: 8px !important;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
-  background: #6366f1 !important;
-  color: #fff !important;
-  border: none !important;
+  font-size: 16px;
+  background: transparent !important;
+  color: inherit !important;
+  border: 1px solid var(--border-color) !important;
   margin: 0 2px;
-  transition: background 0.2s, color 0.2s;
 }
+.ant-pagination-item a { color: inherit !important; }
 .ant-pagination-item-active {
-  background: #fff !important;
-  color: #6366f1 !important;
-  border: 2px solid #6366f1 !important;
+  background: #eef2ff !important;
+  color: #3730a3 !important;
+  border-color: #c7d2fe !important;
 }
 .ant-pagination-prev .ant-pagination-item-link,
 .ant-pagination-next .ant-pagination-item-link {
   background: transparent !important;
-  color: #fff !important;
-  border-radius: 12px !important;
+  color: inherit !important;
+  border-radius: 8px !important;
   border: none !important;
-  font-size: 22px;
+  font-size: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -192,7 +188,7 @@ section {
 }
 .ant-tabs-tab:hover {
   color: #23272f !important;
-  background: #f8fafc !important;
+  background: transparent !important;
 }
 .ant-tabs-tab-active {
   color: #6366f1 !important;
@@ -239,8 +235,8 @@ section {
 
 /* Avatar Styling */
 .ant-avatar {
-  border: 2px solid #fff !important;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  border: 1px solid #fff !important;
+  box-shadow: none !important;
 }
 
 /* Responsive */

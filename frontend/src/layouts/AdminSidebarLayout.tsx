@@ -8,7 +8,6 @@ import {
 } from 'antd';
 import { 
   ProjectOutlined, 
-  TeamOutlined, 
   UnorderedListOutlined, 
   BellOutlined, 
   BarChartOutlined, 
@@ -51,22 +50,22 @@ const AdminSidebarLayout: React.FC = () => {
     getCalendarCount().then(setCalendarCount).catch(() => setCalendarCount(null));
   }, []);
 
-  // Khai báo sidebarItems trước khi sử dụng
-  const sidebarItems = [
+  // Khai báo sidebarItems với quyền theo vai trò
+  const currentRole = user?.role || 'member';
+  const allSidebarItems = [
     { label: 'Dashboard', icon: <HomeOutlined />, path: '/dashboard', badge: null },
     { label: 'Dự án', icon: <ProjectOutlined />, path: '/projects', badge: projectCount },
     { label: 'Task', icon: <UnorderedListOutlined />, path: '/tasks', badge: taskCount },
-    { label: 'Thành viên', icon: <TeamOutlined />, path: '/members', badge: null },
+    // { label: 'Thành viên', icon: <TeamOutlined />, path: '/members', badge: null, allowedRoles: ['admin', 'leader'] as const },
     { label: 'Lịch', icon: <CalendarOutlined />, path: '/calendar', badge: calendarCount },
     { label: 'Thông báo', icon: <BellOutlined />, path: '/notifications', badge: notificationCount },
-    { label: 'Thống kê', icon: <BarChartOutlined />, path: '/statistics', badge: null },
+    { label: 'Thống kê', icon: <BarChartOutlined />, path: '/statistics', badge: null, allowedRoles: ['admin', 'leader'] as const },
     { label: 'Tìm kiếm', icon: <SearchOutlined />, path: '/search', badge: null },
     { label: 'Chat', icon: <MessageOutlined />, path: '/chat', badge: null },
     { label: 'Hồ sơ cá nhân', icon: <UserOutlined />, path: '/profile', badge: null },
-    ...(user?.role === 'admin' || user?.role === 'leader' ? [
-      { label: 'Lịch sử hoạt động', icon: <HistoryOutlined />, path: '/activity-log', badge: null }
-    ] : []),
+    { label: 'Lịch sử hoạt động', icon: <HistoryOutlined />, path: '/activity-log', badge: null, allowedRoles: ['admin', 'leader'] as const },
   ];
+  const sidebarItems = allSidebarItems.filter((item: any) => !item.allowedRoles || item.allowedRoles.includes(currentRole));
 
   const selectedKey = sidebarItems.find(item => 
     location.pathname.startsWith(item.path)
@@ -101,7 +100,7 @@ const AdminSidebarLayout: React.FC = () => {
 
   return (
     <Layout style={{ 
-      minHeight: 'calc(100vh - 70px)',
+      minHeight: 'calc(100vh - 64px)',
       background: '#f6f8fa'
     }}>
       {/* Sidebar */}
@@ -112,18 +111,17 @@ const AdminSidebarLayout: React.FC = () => {
         style={{
           background: '#fff',
           borderRight: '1px solid #e2e8f0',
-          boxShadow: '2px 0 8px rgba(0, 0, 0, 0.06)',
           position: 'sticky',
           top: 0,
-          height: 'calc(100vh - 70px)',
+          height: 'calc(100vh - 64px)',
           overflow: 'auto'
         }}
       >
         {/* Sidebar Header */}
         <div style={{
-          padding: '24px 16px 16px',
+          padding: '16px 12px 12px',
           borderBottom: '1px solid #e2e8f0',
-          marginBottom: '8px'
+          marginBottom: '4px'
         }}>
           <div style={{
             display: 'flex',
@@ -149,19 +147,16 @@ const AdminSidebarLayout: React.FC = () => {
               onClick={() => setCollapsed(!collapsed)}
               style={{
                 borderRadius: '8px',
-                color: '#64748b',
-                border: '1px solid #e2e8f0',
-                background: '#fff'
+                color: '#64748b'
               }}
             />
           </div>
           
           {!collapsed && (
             <div style={{
-              padding: '12px 16px',
-              background: 'rgba(99, 102, 241, 0.05)',
-              borderRadius: '12px',
-              border: '1px solid rgba(99, 102, 241, 0.1)'
+              padding: '10px 12px',
+              background: '#f8fafc',
+              borderRadius: '10px'
             }}>
               <Text style={{ 
                 fontSize: '12px', 
@@ -191,14 +186,14 @@ const AdminSidebarLayout: React.FC = () => {
           style={{
             border: 'none',
             background: 'transparent',
-            padding: '0 8px'
+            padding: '0 6px'
           }}
           className="custom-menu"
         />
 
         {/* Quick Actions */}
         {!collapsed && (
-          <div style={{ padding: '16px' }}>
+          <div style={{ padding: '12px' }}>
             <Text style={{ 
               fontSize: '12px', 
               color: '#64748b',
@@ -208,28 +203,26 @@ const AdminSidebarLayout: React.FC = () => {
               Thao tác nhanh
             </Text>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {user?.role !== 'member' && (
+                <Button
+                  type="primary"
+                  size="small"
+                  icon={<PlusOutlined />}
+                  style={{
+                    borderRadius: '8px',
+                    height: '32px',
+                    fontSize: '12px'
+                  }}
+                  onClick={() => navigate('/projects')}
+                >
+                  + Tạo dự án mới
+                </Button>
+              )}
               <Button
-                type="primary"
                 size="small"
                 icon={<PlusOutlined />}
                 style={{
                   borderRadius: '8px',
-                  background: '#6366f1',
-                  border: 'none',
-                  height: '32px',
-                  fontSize: '12px'
-                }}
-                onClick={() => navigate('/projects')}
-              >
-                + Tạo dự án mới
-              </Button>
-              <Button
-                size="small"
-                icon={<PlusOutlined />}
-                style={{
-                  borderRadius: '8px',
-                  border: '1px solid #e2e8f0',
-                  background: '#fff',
                   height: '32px',
                   fontSize: '12px'
                 }}
@@ -244,18 +237,17 @@ const AdminSidebarLayout: React.FC = () => {
 
       {/* Main Content */}
       <Content style={{
-        padding: '24px',
+        padding: '16px',
         background: '#f6f8fa',
-        minHeight: 'calc(100vh - 70px)',
+        minHeight: 'calc(100vh - 64px)',
         overflow: 'auto'
       }}>
         <div style={{
           background: '#fff',
-          borderRadius: '12px',
+          borderRadius: '10px',
           border: '1px solid #e2e8f0',
-          padding: '24px',
-          minHeight: 'calc(100vh - 118px)',
-          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)'
+          padding: '16px',
+          minHeight: 'calc(100vh - 112px)'
         }}>
           <Outlet />
         </div>

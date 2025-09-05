@@ -57,15 +57,14 @@ const MainHeader: React.FC = () => {
       style={{ 
         background: '#fff',
         borderBottom: '1px solid #e2e8f0',
-        padding: '0 24px',
-        height: '70px',
+        padding: '0 16px',
+        height: '64px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         position: 'sticky',
         top: 0,
-        zIndex: 1000,
-        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)'
+        zIndex: 1000
       }}
     >
       {/* Left Section - Hamburger Menu */}
@@ -75,9 +74,7 @@ const MainHeader: React.FC = () => {
           icon={<MenuOutlined />}
           style={{
             borderRadius: '8px',
-            color: '#64748b',
-            border: '1px solid #e2e8f0',
-            background: '#fff'
+            color: '#64748b'
           }}
         />
         <Text 
@@ -118,9 +115,7 @@ const MainHeader: React.FC = () => {
           icon={<SearchOutlined />}
           style={{
             borderRadius: '8px',
-            color: '#64748b',
-            border: '1px solid #e2e8f0',
-            background: '#fff'
+            color: '#64748b'
           }}
         />
 
@@ -143,19 +138,15 @@ const MainHeader: React.FC = () => {
           display: 'flex', 
           alignItems: 'center', 
           gap: '8px',
-          padding: '4px 8px',
-          borderRadius: '8px',
-          background: '#fff',
-          border: '1px solid #e2e8f0'
+          padding: '0 8px',
+          borderRadius: '8px'
         }}>
           <span style={{ fontSize: '12px', color: '#64748b' }}>☀️</span>
           <Switch
             checked={theme === 'dark'}
             onChange={toggleTheme}
             size="small"
-            style={{
-              backgroundColor: theme === 'dark' ? '#6366f1' : '#d1d5db'
-            }}
+            style={{ backgroundColor: theme === 'dark' ? '#6366f1' : undefined }}
           />
           <span style={{ fontSize: '12px', color: '#64748b' }}>🌙</span>
         </div>
@@ -164,12 +155,7 @@ const MainHeader: React.FC = () => {
         <Select
           value={i18n.language}
           onChange={lng => i18n.changeLanguage(lng)}
-          style={{ 
-            width: 100,
-            borderRadius: '8px',
-            border: '1px solid #e2e8f0',
-            background: '#fff'
-          }}
+          style={{ width: 100 }}
           size="small"
         >
           <Select.Option value="vi">🇻🇳 Tiếng Việt</Select.Option>
@@ -191,12 +177,9 @@ const MainHeader: React.FC = () => {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
-                padding: '8px 12px',
-                borderRadius: '12px',
-                background: '#fff',
-                border: '1px solid #e2e8f0',
-                cursor: 'pointer',
-                transition: 'background-color 0.2s ease'
+                padding: '6px 10px',
+                borderRadius: '10px',
+                cursor: 'pointer'
               }}
             >
               <Avatar 

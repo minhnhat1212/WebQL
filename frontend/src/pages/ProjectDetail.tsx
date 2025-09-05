@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Card, Typography, Button, Table, Tag, Modal, Form, Input, DatePicker, Select, Spin, Row, Col, Divider, Space, Avatar, Progress, Statistic, Popconfirm, message, Tooltip, Badge } from 'antd';
+import { Card, Typography, Button, Table, Tag, Modal, Form, Input, DatePicker, Select, Spin, Row, Col, Divider, Space, Avatar, Progress, Statistic, Popconfirm, message, Tooltip, Badge, AutoComplete, Tabs } from 'antd';
 import { 
   PlusOutlined, 
   UserOutlined, 
@@ -18,7 +18,9 @@ import {
 } from '@ant-design/icons';
 import { getProjects, deleteProject } from '../services/projectApi';
 import { getTasks, createTask } from '../services/taskApi';
-import { getMembers } from '../services/memberApi';
+import { getMembers, addMember, removeMember, changeLeader } from '../services/memberApi';
+import api from '../services/api';
+import { useAuth } from '../hooks/useAuth';
 import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
@@ -38,6 +40,7 @@ const statusIcons: Record<string, any> = {
 export default function ProjectDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [project, setProject] = useState<any>(null);
   const [tasks, setTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,18 +49,26 @@ export default function ProjectDetail() {
   const [form] = Form.useForm();
   const [taskDetail, setTaskDetail] = useState<any>(null);
   const [detailModal, setDetailModal] = useState(false);
+  const [memberModalOpen, setMemberModalOpen] = useState(false);
+  const [userOptions, setUserOptions] = useState<any[]>([]);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [memberForm] = Form.useForm();
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [projects, tasks, members] = await Promise.all([
+      const [projects, tasks, membersRes] = await Promise.all([
         getProjects(),
         getTasks({ project: id }),
         getMembers(id!),
       ]);
       setProject(projects.find((p: any) => p._id === id));
       setTasks(tasks);
-      setMembers(members);
+      if (membersRes && (membersRes as any).members) {
+        setMembers((membersRes as any).members);
+      } else {
+        setMembers(Array.isArray(membersRes) ? (membersRes as any) : []);
+      }
     } catch (error) {
       message.error('Có lỗi xảy ra khi tải dữ liệu');
     }
@@ -97,6 +108,66 @@ export default function ProjectDetail() {
       navigate('/projects');
     } catch (error) {
       message.error('Có lỗi xảy ra khi xóa dự án');
+    }
+  };
+
+  // Quyền chỉnh sửa
+  const canEdit = project && (
+    user?.role === 'admin' ||
+    project?.leader?._id === user?.id ||
+    project?.leader?.id === user?.id
+  );
+
+  // Tìm user để thêm thành viên
+  const searchUser = async (q: string) => {
+    if (!q) return setUserOptions([]);
+    try {
+      const res = await api.get('/search/users', { params: { q } });
+      setUserOptions(res.data.map((u: any) => ({ value: u._id, label: `${u.name} (${u.email})` })));
+    } catch (error) {
+      setUserOptions([]);
+    }
+  };
+
+  const isLeader = (memberId: string) =>
+    project?.leader?._id === memberId || project?.leader?.id === memberId;
+
+  const handleAddMember = async () => {
+    try {
+      const values = await memberForm.validateFields();
+      await addMember(id!, values.userId);
+      message.success('Đã thêm thành viên');
+      setMemberModalOpen(false);
+      memberForm.resetFields();
+      await fetchData();
+    } catch (error: any) {
+      message.error(error?.response?.data?.message || 'Có lỗi xảy ra');
+    }
+  };
+
+  const handleRemoveMember = async (userId: string) => {
+    try {
+      setActionLoading(`remove-${userId}`);
+      await removeMember(id!, userId);
+      message.success('Đã gỡ thành viên');
+      await fetchData();
+    } catch (error: any) {
+      message.error(error?.response?.data?.message || 'Có lỗi xảy ra');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleChangeLeader = async (userId: string) => {
+    try {
+      setActionLoading(`leader-${userId}`);
+      await changeLeader(id!, userId);
+      message.success('Đã đổi trưởng nhóm');
+      await fetchData();
+    } catch (error: any) {
+      message.error(error?.response?.data?.message || 'Có lỗi xảy ra');
+    } finally {
+      setActionLoading(null);
     }
   };
 
@@ -193,66 +264,25 @@ export default function ProjectDetail() {
   }
 
   return (
-    <div style={{ 
-      padding: '24px', 
-      background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-      minHeight: '100vh' 
-    }}>
+    <div style={{ padding: '24px', minHeight: '100vh' }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-        {/* Header Section */}
         <Card className="project-header-card fade-in-up">
-          <Row gutter={[24, 16]} align="middle" style={{ position: 'relative', zIndex: 1 }}>
-            <Col xs={24} md={16}>
-              <Title level={2} style={{ color: 'white', margin: 0, textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}>
+          <Row gutter={[24, 16]} align="middle">
+            <Col xs={24} md={18}>
+              <Title level={2} style={{ margin: 0 }}>
                 {project?.name}
               </Title>
-              <Text style={{ color: 'rgba(255,255,255,0.95)', fontSize: '16px', textShadow: '0 1px 2px rgba(0,0,0,0.2)' }}>
+              <Text type="secondary">
                 {project?.description}
               </Text>
             </Col>
-            <Col xs={24} md={8} style={{ textAlign: 'right' }}>
+            <Col xs={24} md={6} style={{ textAlign: 'right' }}>
               <Space>
-                <Button 
-                  type="primary" 
-                  size="large"
-                  icon={<PlusOutlined />}
-                  onClick={openCreateTask}
-                  style={{ 
-                    borderRadius: '12px',
-                    height: '48px',
-                    fontSize: '16px',
-                    fontWeight: 600,
-                    background: 'rgba(255,255,255,0.2)',
-                    border: '1px solid rgba(255,255,255,0.3)',
-                    color: 'white',
-                    transition: 'all 0.3s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(255,255,255,0.3)';
-                    e.currentTarget.style.transform = 'scale(1.05)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'rgba(255,255,255,0.2)';
-                    e.currentTarget.style.transform = 'scale(1)';
-                  }}
-                >
-                  THÊM TASK
-                </Button>
                 <Tooltip title="Chỉnh sửa dự án">
-                  <Button 
-                    type="text"
-                    size="large"
-                    icon={<EditOutlined />}
-                    className="action-button"
-                  />
+                  <Button type="text" size="large" icon={<EditOutlined />} className="action-button" />
                 </Tooltip>
                 <Tooltip title="Cài đặt dự án">
-                  <Button 
-                    type="text"
-                    size="large"
-                    icon={<SettingOutlined />}
-                    className="action-button"
-                  />
+                  <Button type="text" size="large" icon={<SettingOutlined />} className="action-button" />
                 </Tooltip>
                 <Popconfirm
                   title="Xóa dự án"
@@ -263,13 +293,7 @@ export default function ProjectDetail() {
                   icon={<ExclamationCircleOutlined style={{ color: '#ff4d4f' }} />}
                 >
                   <Tooltip title="Xóa dự án">
-                    <Button 
-                      type="text"
-                      size="large"
-                      danger
-                      icon={<DeleteOutlined />}
-                      className="action-button delete-button"
-                    />
+                    <Button type="text" size="large" danger icon={<DeleteOutlined />} className="action-button delete-button" />
                   </Tooltip>
                 </Popconfirm>
               </Space>
@@ -277,181 +301,193 @@ export default function ProjectDetail() {
           </Row>
         </Card>
 
-        {/* Project Info Cards */}
-        <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
-          <Col xs={24} sm={6}>
-            <Card className="project-stats-card fade-in-up">
-              <CalendarOutlined style={{ fontSize: '28px', color: '#1890ff', marginBottom: '12px' }} />
-              <div style={{ fontSize: '14px', color: '#666', marginBottom: '6px', fontWeight: 500 }}>Deadline</div>
-              <div style={{ fontSize: '20px', fontWeight: 700, color: '#1890ff' }}>
-                {project?.deadline ? dayjs(project.deadline).format('DD/MM/YYYY') : 'Chưa có'}
-              </div>
-            </Card>
-          </Col>
-          <Col xs={24} sm={6}>
-            <Card className="project-stats-card fade-in-up">
-              <UserOutlined style={{ fontSize: '28px', color: '#52c41a', marginBottom: '12px' }} />
-              <div style={{ fontSize: '14px', color: '#666', marginBottom: '6px', fontWeight: 500 }}>Trưởng nhóm</div>
-              <div style={{ fontSize: '20px', fontWeight: 700, color: '#52c41a' }}>
-                {project?.leader?.name || 'Chưa có'}
-              </div>
-            </Card>
-          </Col>
-          <Col xs={24} sm={6}>
-            <Card className="project-stats-card fade-in-up">
-              <TeamOutlined style={{ fontSize: '28px', color: '#722ed1', marginBottom: '12px' }} />
-              <div style={{ fontSize: '14px', color: '#666', marginBottom: '6px', fontWeight: 500 }}>Thành viên</div>
-              <div style={{ fontSize: '20px', fontWeight: 700, color: '#722ed1' }}>
-                {Array.isArray(project?.members) ? project.members.length : 0}
-              </div>
-            </Card>
-          </Col>
-          <Col xs={24} sm={6}>
-            <Card className="project-stats-card fade-in-up">
-              <BarChartOutlined style={{ fontSize: '28px', color: '#fa8c16', marginBottom: '12px' }} />
-              <div style={{ fontSize: '14px', color: '#666', marginBottom: '6px', fontWeight: 500 }}>Tiến độ</div>
-              <div style={{ fontSize: '20px', fontWeight: 700, color: '#fa8c16' }}>
-                {progressPercent}%
-              </div>
-            </Card>
-          </Col>
-        </Row>
+        <Tabs
+          defaultActiveKey="overview"
+          items={[
+            {
+              key: 'overview',
+              label: 'Tổng quan',
+              children: (
+                <div>
+                  <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                    <Col xs={24} sm={6}>
+                      <Card className="project-stats-card fade-in-up">
+                        <CalendarOutlined style={{ fontSize: 28, color: '#1890ff', marginBottom: 12 }} />
+                        <div style={{ fontSize: 14, color: '#666', marginBottom: 6, fontWeight: 500 }}>Deadline</div>
+                        <div style={{ fontSize: 20, fontWeight: 700, color: '#1890ff' }}>
+                          {project?.deadline ? dayjs(project.deadline).format('DD/MM/YYYY') : 'Chưa có'}
+                        </div>
+                      </Card>
+                    </Col>
+                    <Col xs={24} sm={6}>
+                      <Card className="project-stats-card fade-in-up">
+                        <UserOutlined style={{ fontSize: 28, color: '#52c41a', marginBottom: 12 }} />
+                        <div style={{ fontSize: 14, color: '#666', marginBottom: 6, fontWeight: 500 }}>Trưởng nhóm</div>
+                        <div style={{ fontSize: 20, fontWeight: 700, color: '#52c41a' }}>
+                          {project?.leader?.name || 'Chưa có'}
+                        </div>
+                      </Card>
+                    </Col>
+                    <Col xs={24} sm={6}>
+                      <Card className="project-stats-card fade-in-up">
+                        <TeamOutlined style={{ fontSize: 28, color: '#722ed1', marginBottom: 12 }} />
+                        <div style={{ fontSize: 14, color: '#666', marginBottom: 6, fontWeight: 500 }}>Thành viên</div>
+                        <div style={{ fontSize: 20, fontWeight: 700, color: '#722ed1' }}>
+                          {Array.isArray(project?.members) ? project.members.length : 0}
+                        </div>
+                      </Card>
+                    </Col>
+                    <Col xs={24} sm={6}>
+                      <Card className="project-stats-card fade-in-up">
+                        <BarChartOutlined style={{ fontSize: 28, color: '#fa8c16', marginBottom: 12 }} />
+                        <div style={{ fontSize: 14, color: '#666', marginBottom: 6, fontWeight: 500 }}>Tiến độ</div>
+                        <div style={{ fontSize: 20, fontWeight: 700, color: '#fa8c16' }}>
+                          {progressPercent}%
+                        </div>
+                      </Card>
+                    </Col>
+                  </Row>
 
-        {/* Task Statistics */}
-        <Card className="task-statistics-card fade-in-up">
-          <Row gutter={[24, 16]} align="middle">
-            <Col xs={24} md={12}>
-              <Title level={4} style={{ color: 'white', margin: 0, marginBottom: '16px' }}>
-                <BarChartOutlined style={{ marginRight: '8px' }} />
-                Thống kê Task
-              </Title>
-              <Row gutter={[16, 16]}>
-                <Col span={8}>
-                  <Statistic
-                    title={<span style={{ color: 'rgba(255,255,255,0.8)' }}>Tổng cộng</span>}
-                    value={taskStats.total}
-                    valueStyle={{ color: 'white', fontSize: '24px', fontWeight: 'bold' }}
-                  />
-                </Col>
-                <Col span={8}>
-                  <Statistic
-                    title={<span style={{ color: 'rgba(255,255,255,0.8)' }}>Đang làm</span>}
-                    value={taskStats.doing}
-                    valueStyle={{ color: '#faad14', fontSize: '24px', fontWeight: 'bold' }}
-                  />
-                </Col>
-                <Col span={8}>
-                  <Statistic
-                    title={<span style={{ color: 'rgba(255,255,255,0.8)' }}>Hoàn thành</span>}
-                    value={taskStats.done}
-                    valueStyle={{ color: '#52c41a', fontSize: '24px', fontWeight: 'bold' }}
-                  />
-                </Col>
-              </Row>
-            </Col>
-            <Col xs={24} md={12}>
-              <div style={{ padding: '16px' }}>
-                <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Text style={{ color: 'white', fontWeight: 600 }}>Tiến độ hoàn thành</Text>
-                  <Text style={{ color: 'white', fontWeight: 600 }}>{progressPercent}%</Text>
+                  <Card className="task-statistics-card fade-in-up">
+                    <Row gutter={[24, 16]} align="middle">
+                      <Col xs={24} md={12}>
+                        <Title level={4} style={{ margin: 0, marginBottom: 16 }}>
+                          <BarChartOutlined style={{ marginRight: 8 }} />
+                          Thống kê Task
+                        </Title>
+                        <Row gutter={[16, 16]}>
+                          <Col span={8}>
+                            <Statistic title={<span>Tổng cộng</span>} value={taskStats.total} />
+                          </Col>
+                          <Col span={8}>
+                            <Statistic title={<span>Đang làm</span>} value={taskStats.doing} valueStyle={{ color: '#faad14' }} />
+                          </Col>
+                          <Col span={8}>
+                            <Statistic title={<span>Hoàn thành</span>} value={taskStats.done} valueStyle={{ color: '#52c41a' }} />
+                          </Col>
+                        </Row>
+                      </Col>
+                      <Col xs={24} md={12}>
+                        <div style={{ padding: 16 }}>
+                          <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <Text strong>Tiến độ hoàn thành</Text>
+                            <Text strong>{progressPercent}%</Text>
+                          </div>
+                          <Progress percent={progressPercent} strokeWidth={12} showInfo={false} style={{ marginBottom: 16 }} />
+                          <Row gutter={[8, 8]}>
+                            <Col span={8}>
+                              <Badge count={taskStats.todo}>
+                                <Tag color="default" style={{ borderRadius: 8, padding: '4px 12px' }}>To Do</Tag>
+                              </Badge>
+                            </Col>
+                            <Col span={8}>
+                              <Badge count={taskStats.doing}>
+                                <Tag color="processing" style={{ borderRadius: 8, padding: '4px 12px' }}>Doing</Tag>
+                              </Badge>
+                            </Col>
+                            <Col span={8}>
+                              <Badge count={taskStats.done}>
+                                <Tag color="success" style={{ borderRadius: 8, padding: '4px 12px' }}>Done</Tag>
+                              </Badge>
+                            </Col>
+                          </Row>
+                        </div>
+                      </Col>
+                    </Row>
+                  </Card>
                 </div>
-                <Progress 
-                  percent={progressPercent} 
-                  strokeColor={{
-                    '0%': '#108ee9',
-                    '100%': '#87d068',
-                  }}
-                  strokeWidth={12}
-                  showInfo={false}
-                  style={{ marginBottom: '16px' }}
-                />
-                <Row gutter={[8, 8]}>
-                  <Col span={8}>
-                    <Badge count={taskStats.todo} style={{ backgroundColor: '#d9d9d9' }}>
-                      <Tag color="default" style={{ borderRadius: '8px', padding: '4px 12px' }}>
-                        To Do
-                      </Tag>
-                    </Badge>
-                  </Col>
-                  <Col span={8}>
-                    <Badge count={taskStats.doing} style={{ backgroundColor: '#faad14' }}>
-                      <Tag color="processing" style={{ borderRadius: '8px', padding: '4px 12px' }}>
-                        Doing
-                      </Tag>
-                    </Badge>
-                  </Col>
-                  <Col span={8}>
-                    <Badge count={taskStats.done} style={{ backgroundColor: '#52c41a' }}>
-                      <Tag color="success" style={{ borderRadius: '8px', padding: '4px 12px' }}>
-                        Done
-                      </Tag>
-                    </Badge>
-                  </Col>
-                </Row>
-              </div>
-            </Col>
-          </Row>
-        </Card>
-
-        {/* Tasks Section */}
-        <Card className="task-table-card fade-in-up">
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center', 
-            marginBottom: '24px',
-            padding: '0 8px'
-          }}>
-            <Title level={3} style={{ margin: 0, color: '#262626', fontSize: '24px' }}>
-              <FileTextOutlined style={{ marginRight: '8px', color: '#1890ff' }} />
-              Danh sách task ({tasks.length})
-            </Title>
-            <Space>
-              <Button 
-                type="primary" 
-                icon={<PlusOutlined />}
-                onClick={openCreateTask}
-                style={{ 
-                  borderRadius: '12px',
-                  height: '40px',
-                  fontWeight: 600,
-                  boxShadow: '0 4px 12px rgba(24, 144, 255, 0.3)'
-                }}
-              >
-                Tạo task mới
-              </Button>
-            </Space>
-          </div>
-          
-          <Table
-            dataSource={tasks}
-            columns={columns}
-            rowKey="_id"
-            loading={loading}
-            pagination={{ 
-              pageSize: 8,
-              showSizeChanger: true,
-              showQuickJumper: true,
-              showTotal: (total, range) => `${range[0]}-${range[1]} của ${total} task`,
-              style: { marginTop: '16px' }
-            }}
-            style={{ borderRadius: '16px', overflow: 'hidden' }}
-            rowClassName={(_, index) => 
-              index % 2 === 0 ? 'table-row-light' : 'table-row-dark'
+              )
+            },
+            {
+              key: 'tasks',
+              label: 'Task',
+              children: (
+                <Card className="task-table-card fade-in-up">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, padding: '0 8px' }}>
+                    <Title level={3} style={{ margin: 0, fontSize: 20 }}>
+                      <FileTextOutlined style={{ marginRight: 8, color: '#1890ff' }} />
+                      Danh sách task ({tasks.length})
+                    </Title>
+                    <Space>
+                      <Button type="primary" icon={<PlusOutlined />} onClick={openCreateTask}>Tạo task mới</Button>
+                    </Space>
+                  </div>
+                  <Table
+                    dataSource={tasks}
+                    columns={columns}
+                    rowKey="_id"
+                    loading={loading}
+                    pagination={{ 
+                      pageSize: 8,
+                      showSizeChanger: true,
+                      showQuickJumper: true,
+                      showTotal: (total, range) => `${range[0]}-${range[1]} của ${total} task`,
+                      style: { marginTop: 16 }
+                    }}
+                    style={{ borderRadius: 16, overflow: 'hidden' }}
+                    rowClassName={(_, index) => index % 2 === 0 ? 'table-row-light' : 'table-row-dark'}
+                  />
+                </Card>
+              )
+            },
+            {
+              key: 'members',
+              label: 'Thành viên',
+              children: (
+                <Card className="fade-in-up">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                    <Title level={3} style={{ margin: 0, fontSize: 20 }}>
+                      <TeamOutlined style={{ marginRight: 8, color: '#722ed1' }} />
+                      Thành viên dự án ({members.length})
+                    </Title>
+                    {canEdit && (
+                      <Button type="primary" onClick={() => setMemberModalOpen(true)}>Thêm thành viên</Button>
+                    )}
+                  </div>
+                  <Row gutter={[12, 12]}>
+                    {members.length > 0 ? members.map((m: any) => (
+                      <Col xs={24} md={12} key={m._id}>
+                        <Card size="small">
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <Space>
+                              <Avatar
+                                size={40}
+                                style={{ background: isLeader(m._id) ? '#f59e0b' : '#6366f1', fontWeight: 'bold' }}
+                              >
+                                {m.name?.charAt(0)?.toUpperCase() || <UserOutlined />}
+                              </Avatar>
+                              <div>
+                                <Space>
+                                  <Text strong>{m.name}</Text>
+                                  {isLeader(m._id) && <Tag color="green">Trưởng nhóm</Tag>}
+                                </Space>
+                                <div><Text type="secondary">{m.email}</Text></div>
+                              </div>
+                            </Space>
+                            {canEdit && !isLeader(m._id) && (
+                              <Space>
+                                <Popconfirm title="Đổi trưởng nhóm cho người này?" onConfirm={() => handleChangeLeader(m._id)} okText="Đổi" cancelText="Hủy">
+                                  <Button size="small" type="primary" loading={actionLoading === `leader-${m._id}`}>Đổi trưởng nhóm</Button>
+                                </Popconfirm>
+                                <Popconfirm title="Gỡ thành viên khỏi dự án?" onConfirm={() => handleRemoveMember(m._id)} okText="Gỡ" cancelText="Hủy">
+                                  <Button size="small" danger loading={actionLoading === `remove-${m._id}`}>Gỡ</Button>
+                                </Popconfirm>
+                              </Space>
+                            )}
+                          </div>
+                        </Card>
+                      </Col>
+                    )) : (
+                      <Col span={24}>
+                        <div style={{ textAlign: 'center', color: '#999', padding: 24 }}>Chưa có thành viên</div>
+                      </Col>
+                    )}
+                  </Row>
+                </Card>
+              )
             }
-            onRow={(_, index) => ({
-              style: { transition: 'all 0.2s ease' },
-              onMouseEnter: (e) => {
-                e.currentTarget.style.backgroundColor = '#f8f9fa';
-                e.currentTarget.style.transform = 'scale(1.01)';
-              },
-              onMouseLeave: (e) => {
-                e.currentTarget.style.backgroundColor = (index || 0) % 2 === 0 ? '#ffffff' : '#fafafa';
-                e.currentTarget.style.transform = 'scale(1)';
-              }
-            })}
-          />
-        </Card>
+          ]}
+        />
       </div>
 
       {/* Modal tạo task */}
@@ -559,6 +595,28 @@ export default function ProjectDetail() {
               </Form.Item>
             </Col>
           </Row>
+        </Form>
+      </Modal>
+
+      {/* Modal thêm thành viên */}
+      <Modal
+        open={memberModalOpen}
+        title="Thêm thành viên vào dự án"
+        onCancel={() => { setMemberModalOpen(false); memberForm.resetFields(); }}
+        onOk={handleAddMember}
+        okText="Thêm"
+        cancelText="Hủy"
+      >
+        <Form form={memberForm} layout="vertical">
+          <Form.Item name="userId" label="Tìm kiếm người dùng" rules={[{ required: true, message: 'Chọn người dùng' }]}> 
+            <AutoComplete
+              options={userOptions}
+              onSearch={searchUser}
+              style={{ width: '100%' }}
+              placeholder="Nhập tên hoặc email"
+              filterOption={false}
+            />
+          </Form.Item>
         </Form>
       </Modal>
 

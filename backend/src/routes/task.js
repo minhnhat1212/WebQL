@@ -20,5 +20,17 @@ router.put('/:id', authMiddleware, controller.updateTask);
 router.delete('/:id', authMiddleware, controller.deleteTask);
 // Upload file cho task
 router.post('/:id/upload-files', authMiddleware, controller.uploadFiles);
+// Subtasks & Checklist
+router.post('/:id/subtasks', authMiddleware, controller.addSubtask);
+router.put('/:id/checklist', authMiddleware, controller.updateChecklist);
+router.post('/:id/checklist/toggle', authMiddleware, controller.toggleChecklistItem);
+router.post('/:id/recalculate-progress', authMiddleware, controller.recalculateProgress);
+// Time tracking
+router.post('/:id/timer/start', authMiddleware, controller.startTimer);
+router.post('/:id/timer/stop', authMiddleware, controller.stopTimer);
+router.post('/:id/time-entries', authMiddleware, controller.addTimeEntry);
+router.get('/time-report', authMiddleware, controller.getTimeReport);
+// Recurring generation
+router.post('/:id/generate-recurring', authMiddleware, controller.generateRecurring);
 
 module.exports = router; 

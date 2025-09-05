@@ -7,8 +7,9 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Projects from './pages/Projects';
+import ProjectDetail from './pages/ProjectDetail';
 import Tasks from './pages/Tasks';
-import Members from './pages/Members';
+// import Members from './pages/Members';
 import Statistics from './pages/Statistics';
 import CalendarPage from './pages/Calendar';
 import Notifications from './pages/Notifications';
@@ -23,6 +24,7 @@ import AdminSidebarLayout from './layouts/AdminSidebarLayout';
 import Chat from './pages/Chat';
 import ActivityLog from './pages/ActivityLog';
 import { Toaster } from 'react-hot-toast';
+import TimeReport from './pages/TimeReport';
 
 const { Content } = Layout;
 
@@ -141,10 +143,12 @@ function App() {
                     }>
                       <Route path="/dashboard" element={<Dashboard />} />
                       <Route path="/projects" element={<Projects />} />
+                      <Route path="/projects/:id" element={<ProjectDetail />} />
                       <Route path="/tasks" element={<Tasks />} />
                       <Route path="/tasks/:id" element={<TaskDetail />} />
-                      <Route path="/members" element={<Members />} />
+                      {/* <Route path="/members" element={<Members />} /> */}
                       <Route path="/statistics" element={<Statistics />} />
+                      <Route path="/time-report" element={<TimeReport />} />
                       <Route path="/calendar" element={<CalendarPage />} />
                       <Route path="/notifications" element={<Notifications />} />
                       <Route path="/search" element={<Search />} />

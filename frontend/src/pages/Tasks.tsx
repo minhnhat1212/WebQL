@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Button, Modal, Form, Input, DatePicker, Popconfirm, Tag, Select, Typography, Space, Tooltip, Row, Col, Statistic, Progress, Avatar, Empty } from 'antd';
+import { Card, Button, Modal, Form, Input, DatePicker, Popconfirm, Tag, Select, Typography, Space, Tooltip, Row, Col, Statistic, Progress, Avatar, Empty, Checkbox, Tabs } from 'antd';
 import { getTasks, createTask, updateTask, deleteTask } from '../services/taskApi';
 import { getProjects } from '../services/projectApi';
 import { getMembers } from '../services/memberApi';
@@ -40,6 +40,8 @@ const Tasks: React.FC = () => {
   const [members, setMembers] = useState<any[]>([]);
   const [modalLoading, setModalLoading] = useState(false);
   const [newTaskId, setNewTaskId] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [sortKey, setSortKey] = useState<string>('deadlineAsc');
   const { message } = AntdApp.useApp();
   const navigate = useNavigate();
 
@@ -98,6 +100,11 @@ const Tasks: React.FC = () => {
         project: task.project?._id || task.project, // Đảm bảo đúng định dạng
         assignees: task.assignees ? task.assignees.map((u: any) => u._id || u) : [],
         deadline: task.deadline ? dayjs(task.deadline) : null,
+        priority: task.priority || 'medium',
+        sla: {
+          isHardDeadline: task.sla?.isHardDeadline || false,
+          warnBeforeHours: task.sla?.warnBeforeHours ?? 24,
+        }
       });
       projectId = task.project?._id || task.project;
     } else {
@@ -105,6 +112,7 @@ const Tasks: React.FC = () => {
       // Không tự động chọn project khi tạo task mới
       projectId = filter.project || '';
       if (projectId) form.setFieldsValue({ project: projectId });
+      form.setFieldsValue({ priority: 'medium', sla: { isHardDeadline: false, warnBeforeHours: 24 } });
     }
     if (projectId) fetchMembers(projectId);
     else setMembers([]);
@@ -144,6 +152,13 @@ const Tasks: React.FC = () => {
         assignees: values.assignees,
       };
       delete payload.project; // Xóa trường project vì backend không nhận
+      // Chuẩn hóa SLA
+      if ((values as any).sla) {
+        (payload as any).sla = {
+          isHardDeadline: !!(values as any).sla.isHardDeadline,
+          warnBeforeHours: Number((values as any).sla.warnBeforeHours) || 24,
+        };
+      }
       
       if (editTask) {
         await updateTask(editTask._id, payload);
@@ -190,11 +205,51 @@ const Tasks: React.FC = () => {
   const doneTasks = tasks.filter(t => t.status === 'done').length;
   const progressPercentage = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
 
+  // Lọc + sắp xếp client-side
+  const filteredTasks = React.useMemo(() => {
+    let list = [...tasks];
+    if (searchTerm.trim()) {
+      const q = searchTerm.trim().toLowerCase();
+      list = list.filter(t => (t.name || '').toLowerCase().includes(q) || (t.description || '').toLowerCase().includes(q));
+    }
+    const priorityOrder: Record<string, number> = { urgent: 0, high: 1, medium: 2, low: 3 };
+    list.sort((a: any, b: any) => {
+      switch (sortKey) {
+        case 'deadlineAsc': {
+          const da = a.deadline ? dayjs(a.deadline).valueOf() : Infinity;
+          const db = b.deadline ? dayjs(b.deadline).valueOf() : Infinity;
+          return da - db;
+        }
+        case 'deadlineDesc': {
+          const da = a.deadline ? dayjs(a.deadline).valueOf() : -Infinity;
+          const db = b.deadline ? dayjs(b.deadline).valueOf() : -Infinity;
+          return db - da;
+        }
+        case 'priority': {
+          const pa = priorityOrder[(a.priority || 'medium') as string] ?? 2;
+          const pb = priorityOrder[(b.priority || 'medium') as string] ?? 2;
+          return pa - pb;
+        }
+        case 'progressAsc':
+          return (a.progress || 0) - (b.progress || 0);
+        case 'progressDesc':
+          return (b.progress || 0) - (a.progress || 0);
+        default:
+          return 0;
+      }
+    });
+    return list;
+  }, [tasks, searchTerm, sortKey]);
+
   // Render task card
   const renderTaskCard = (task: any, index: number) => {
     const IconComponent = statusIcons[task.status] || ClockCircleOutlined;
     const isOverdue = task.deadline && dayjs(task.deadline).isBefore(dayjs(), 'day');
     const isNewTask = task._id === newTaskId;
+    const priorityColor =
+      task.priority === 'urgent' ? 'red' :
+      task.priority === 'high' ? 'volcano' :
+      task.priority === 'medium' ? 'gold' : 'green';
     
     return (
       <div
@@ -237,6 +292,11 @@ const Tasks: React.FC = () => {
               </Tag>
             </div>
             <Space>
+              {task.priority && (
+                <Tag color={priorityColor} className="status-tag">
+                  Ưu tiên: {task.priority}
+                </Tag>
+              )}
               <Tag 
                 color={statusColor[task.status]} 
                 icon={<IconComponent />}
@@ -292,6 +352,17 @@ const Tasks: React.FC = () => {
                 '100%': '#87d068',
               }}
             />
+            {task.priority && (
+              <div style={{ marginTop: 8 }}>
+                <Tag color={
+                  task.priority === 'urgent' ? 'red' :
+                  task.priority === 'high' ? 'volcano' :
+                  task.priority === 'medium' ? 'gold' : 'green'
+                }>
+                  Ưu tiên: {task.priority}
+                </Tag>
+              </div>
+            )}
           </div>
 
           {/* Assignees */}
@@ -378,44 +449,20 @@ const Tasks: React.FC = () => {
   };
 
   return (
-    <div style={{ 
-      minHeight: '100vh', 
-      background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-      padding: '24px'
-    }}>
+    <div style={{ minHeight: '100vh', padding: '24px' }}>
       <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-        {/* Header Section */}
-        <Card 
-          className="task-header-card fade-in-up"
-        >
+        <Card className="task-header-card fade-in-up">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <Typography.Title level={2} style={{ color: 'white', margin: 0, fontWeight: 700 }}>
+              <Typography.Title level={2} style={{ margin: 0 }}>
                 Quản lý công việc
               </Typography.Title>
-              <Typography.Text style={{ color: 'rgba(255,255,255,0.9)', fontSize: '16px' }}>
+              <Typography.Text>
                 Theo dõi và quản lý tất cả task trong dự án
               </Typography.Text>
             </div>
             {canCreate && (
-              <Button 
-                type="primary" 
-                size="large" 
-                icon={<PlusOutlined />} 
-                onClick={() => openModal()} 
-                style={{ 
-                  borderRadius: '12px', 
-                  height: '48px', 
-                  fontWeight: 600, 
-                  background: 'rgba(255,255,255,0.2)', 
-                  border: '1px solid rgba(255,255,255,0.3)', 
-                  color: 'white',
-                  fontSize: '16px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px'
-                }}
-              >
+              <Button type="primary" size="large" icon={<PlusOutlined />} onClick={() => openModal()}>
                 Tạo task mới
               </Button>
             )}
@@ -498,70 +545,52 @@ const Tasks: React.FC = () => {
         </Card>
 
         {/* Filters Section */}
-        <Card 
-          className="filters-card slide-in-up"
-        >
-          <Typography.Title level={4} style={{ margin: '0 0 16px 0', color: '#374151' }}>
-            Bộ lọc và tìm kiếm
-          </Typography.Title>
+        <Card className="filters-card slide-in-up">
+          <Tabs
+            activeKey={filter.status || 'all'}
+            onChange={(key) => setFilter(f => ({ ...f, status: key === 'all' ? undefined : key }))}
+            items={[
+              { key: 'all', label: `Tất cả (${totalTasks})` },
+              { key: 'todo', label: `Chờ thực hiện (${todoTasks})` },
+              { key: 'doing', label: `Đang thực hiện (${doingTasks})` },
+              { key: 'done', label: `Hoàn thành (${doneTasks})` },
+            ]}
+          />
           <Row gutter={[16, 16]} align="middle">
             <Col xs={24} sm={12} md={8}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Typography.Text style={{ fontWeight: 500, color: '#64748b' }}>
-                  Dự án:
-                </Typography.Text>
-                <Select 
-                  placeholder="Tất cả dự án" 
-                  allowClear 
-                  style={{ flex: 1 }} 
-                  value={filter.project} 
-                  onChange={v => setFilter(f => ({ ...f, project: v }))} 
-                  showSearch 
-                  optionFilterProp="children"
-                >
-                  {projects.map((pj: any) => (
-                    <Select.Option key={pj._id} value={pj._id}>{pj.name}</Select.Option>
-                  ))}
-                </Select>
-              </div>
+              <Select 
+                placeholder="Tất cả dự án" 
+                allowClear 
+                style={{ width: '100%' }} 
+                value={filter.project} 
+                onChange={v => setFilter(f => ({ ...f, project: v }))} 
+                showSearch 
+                optionFilterProp="children"
+              >
+                {projects.map((pj: any) => (
+                  <Select.Option key={pj._id} value={pj._id}>{pj.name}</Select.Option>
+                ))}
+              </Select>
             </Col>
-            <Col xs={24} sm={12} md={8}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Typography.Text style={{ fontWeight: 500, color: '#64748b' }}>
-                  Trạng thái:
-                </Typography.Text>
-                <Select 
-                  placeholder="Tất cả trạng thái" 
-                  allowClear 
-                  style={{ flex: 1 }} 
-                  value={filter.status} 
-                  onChange={v => setFilter(f => ({ ...f, status: v }))}
-                >
-                  <Select.Option value="todo">Chờ thực hiện</Select.Option>
-                  <Select.Option value="doing">Đang thực hiện</Select.Option>
-                  <Select.Option value="done">Hoàn thành</Select.Option>
-                </Select>
-              </div>
+            <Col xs={24} sm={12} md={10}>
+              <Input.Search
+                placeholder="Tìm theo tên hoặc mô tả"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                allowClear
+              />
             </Col>
-            <Col xs={24} sm={24} md={8}>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <Button 
-                  onClick={() => setFilter({})}
-                  style={{ 
-                    borderRadius: '8px',
-                    fontWeight: 500
-                  }}
-                >
-                  Xóa bộ lọc
-                </Button>
-                <Typography.Text style={{ 
-                  alignSelf: 'center', 
-                  color: '#64748b', 
-                  fontSize: '14px' 
-                }}>
-                  {totalTasks} task được tìm thấy
-                </Typography.Text>
-              </div>
+            <Col xs={24} sm={24} md={6}>
+              <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
+                <Select value={sortKey} onChange={setSortKey} style={{ minWidth: 180 }}>
+                  <Select.Option value="deadlineAsc">Sắp xếp: Deadline ↑</Select.Option>
+                  <Select.Option value="deadlineDesc">Sắp xếp: Deadline ↓</Select.Option>
+                  <Select.Option value="priority">Sắp xếp: Ưu tiên</Select.Option>
+                  <Select.Option value="progressAsc">Sắp xếp: Tiến độ ↑</Select.Option>
+                  <Select.Option value="progressDesc">Sắp xếp: Tiến độ ↓</Select.Option>
+                </Select>
+                <Button onClick={() => { setFilter({}); setSearchTerm(''); setSortKey('deadlineAsc'); }}>Đặt lại</Button>
+              </Space>
             </Col>
           </Row>
         </Card>
@@ -583,14 +612,14 @@ const Tasks: React.FC = () => {
                 Đang tải dữ liệu...
               </Typography.Text>
             </div>
-          ) : tasks.length === 0 ? (
+          ) : filteredTasks.length === 0 ? (
             <Empty
               description="Không có task nào"
               style={{ padding: '40px' }}
             />
           ) : (
             <div className="task-grid">
-              {tasks.map((task, index) => renderTaskCard(task, index))}
+              {filteredTasks.map((task, index) => renderTaskCard(task, index))}
             </div>
           )}
         </Card>
@@ -675,6 +704,45 @@ const Tasks: React.FC = () => {
                   <Select.Option value="doing">Đang thực hiện</Select.Option>
                   <Select.Option value="done">Hoàn thành</Select.Option>
                 </Select>
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item 
+                name="priority" 
+                label={
+                  <Typography.Text strong style={{ color: '#374151' }}>
+                    Ưu tiên
+                  </Typography.Text>
+                } 
+                initialValue="medium"
+              >
+                <Select style={{ borderRadius: '8px' }}>
+                  <Select.Option value="low">Thấp</Select.Option>
+                  <Select.Option value="medium">Trung bình</Select.Option>
+                  <Select.Option value="high">Cao</Select.Option>
+                  <Select.Option value="urgent">Khẩn cấp</Select.Option>
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item 
+                label={
+                  <Typography.Text strong style={{ color: '#374151' }}>
+                    SLA
+                  </Typography.Text>
+                }
+              >
+                <Input.Group compact>
+                  <Form.Item name={["sla", "isHardDeadline"]} noStyle valuePropName="checked">
+                    <Checkbox style={{ marginRight: 8 }}>Deadline cứng</Checkbox>
+                  </Form.Item>
+                  <Form.Item name={["sla", "warnBeforeHours"]} noStyle initialValue={24}>
+                    <Input type="number" min={0} style={{ width: 120 }} placeholder="Warn (giờ)" />
+                  </Form.Item>
+                </Input.Group>
               </Form.Item>
             </Col>
           </Row>

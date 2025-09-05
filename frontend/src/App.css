@@ -1,23 +1,17 @@
 #root {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2.5rem 1rem;
-  text-align: center;
+  padding: 2rem 1rem;
+  text-align: left;
   background: var(--bg-primary);
 }
 
 .logo {
-  height: 5em;
-  padding: 1em;
-  will-change: filter;
-  transition: filter 300ms;
-  border-radius: 12px;
+  height: 4em;
+  padding: 0.5em;
+  transition: filter 200ms;
+  border-radius: 8px;
   background: var(--bg-secondary);
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.04);
-}
-.logo:hover {
-  filter: drop-shadow(0 0 1.5em #6366f1aa);
-  background: var(--bg-tertiary);
 }
 
 .card {
@@ -25,22 +19,13 @@
   box-shadow: var(--card-shadow);
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
-  padding: 2rem 1.5rem;
-  margin-bottom: 1.5rem;
-  transition: box-shadow 0.2s, transform 0.2s;
-  animation: fadeInUp 0.5s cubic-bezier(0.23, 1, 0.32, 1);
-}
-.card:hover {
-  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.12);
-  transform: translateY(-2px) scale(1.01);
+  padding: 1.25rem 1rem;
+  margin-bottom: 1rem;
 }
 
 section {
   margin-bottom: var(--section-spacing);
-  padding: 28px 0;
-  background: var(--bg-secondary);
-  border-radius: 14px;
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.03);
+  padding: 16px 0;
 }
 
 .read-the-docs {
@@ -57,12 +42,12 @@ section {
   color: var(--text-secondary) !important;
 }
 .custom-menu .ant-menu-item:hover {
-  background: var(--primary-color) !important;
-  color: #fff !important;
+  background: #f3f4f6 !important;
+  color: inherit !important;
 }
 .custom-menu .ant-menu-item-selected {
-  background: var(--primary-hover) !important;
-  color: #fff !important;
+  background: #eef2ff !important;
+  color: #3730a3 !important;
   font-weight: 600 !important;
 }
 .custom-menu .ant-menu-item-selected .ant-menu-item-icon {
@@ -97,21 +82,15 @@ section {
   transition: box-shadow 0.2s !important;
 }
 .ant-card:hover {
-  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.12) !important;
+  box-shadow: var(--card-shadow) !important;
 }
 
 /* Custom Input Styling */
 .ant-input, .ant-input-password {
   border-radius: var(--input-radius) !important;
   border: 1px solid var(--border-color) !important;
-  background: var(--bg-secondary) !important;
+  background: #fff !important;
   color: var(--text-primary) !important;
-  transition: border-color 0.2s, box-shadow 0.2s !important;
-}
-.ant-input:focus, .ant-input-password:focus,
-.ant-input:hover, .ant-input-password:hover {
-  border-color: var(--primary-color) !important;
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.10) !important;
 }
 
 /* Custom Select Styling */
@@ -134,7 +113,7 @@ section {
   border: 1px solid var(--border-color) !important;
 }
 .ant-table-thead > tr > th {
-  background: var(--bg-tertiary) !important;
+  background: #f8fafc !important;
   border-bottom: 1px solid var(--border-color) !important;
   font-weight: 600 !important;
   color: var(--text-primary) !important;
@@ -171,8 +150,8 @@ section {
   color: var(--text-primary) !important;
 }
 .ant-dropdown-menu-item:hover {
-  background: var(--primary-color) !important;
-  color: #fff !important;
+  background: #f3f4f6 !important;
+  color: inherit !important;
 }
 
 /* Custom Switch Styling */
@@ -187,16 +166,16 @@ section {
 
 /* Custom Tag Styling */
 .ant-tag {
-  border-radius: 8px !important;
-  border: none !important;
+  border-radius: 6px !important;
+  border: 1px solid var(--border-color) !important;
   font-weight: 500 !important;
-  background: var(--bg-tertiary) !important;
-  color: var(--primary-color) !important;
+  background: #fff !important;
+  color: var(--text-secondary) !important;
 }
 
 /* Custom Avatar Styling */
 .ant-avatar {
-  border: 2px solid var(--border-color) !important;
+  border: 1px solid var(--border-color) !important;
 }
 
 /* Custom Divider Styling */
@@ -380,7 +359,6 @@ section {
 .project-card-actions .ant-btn:not(.ant-btn-dangerous):hover {
   background: #6366f1;
   color: #fff;
-  box-shadow: 0 4px 16px #6366f133;
 }
 .project-card-actions .ant-btn-dangerous {
   background: #f87171;
@@ -395,34 +373,25 @@ section {
 
 /* Project Detail Page Styles */
 .project-header-card {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 20px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
-  margin-bottom: 24px;
-  border: none;
-  color: white;
+  background: #f8fafc;
+  border-radius: 12px;
+  box-shadow: var(--card-shadow);
+  margin-bottom: 16px;
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
   position: relative;
   overflow: hidden;
 }
 
 .project-header-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(255,255,255,0.1);
-  backdrop-filter: blur(10px);
+  content: none;
 }
 
 .project-stats-card {
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-  border: none;
+  border-radius: 12px;
+  box-shadow: var(--card-shadow);
+  border: 1px solid var(--border-color);
   text-align: center;
-  transition: all 0.3s ease;
-  cursor: pointer;
 }
 
 .project-stats-card:hover {
@@ -431,33 +400,31 @@ section {
 }
 
 .task-statistics-card {
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-  border: none;
-  margin-bottom: 24px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  border-radius: 12px;
+  box-shadow: var(--card-shadow);
+  border: 1px solid var(--border-color);
+  margin-bottom: 16px;
+  background: #fff;
+  color: var(--text-primary);
 }
 
 .task-table-card {
-  border-radius: 20px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-  border: none;
+  border-radius: 12px;
+  box-shadow: var(--card-shadow);
+  border: 1px solid var(--border-color);
   background: white;
 }
 
 .action-button {
-  border-radius: 12px;
-  height: 48px;
-  width: 48px;
-  transition: all 0.3s ease;
-  border: 1px solid rgba(255,255,255,0.3);
-  color: white;
+  border-radius: 8px;
+  height: 40px;
+  width: 40px;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
 }
 
 .action-button:hover {
-  transform: scale(1.05);
-  background: rgba(255,255,255,0.3) !important;
+  background: #f3f4f6 !important;
 }
 
 .delete-button {
@@ -480,7 +447,6 @@ section {
 
 .table-row-hover {
   background-color: #f8f9fa !important;
-  transform: scale(1.01);
 }
 
 /* Progress bar gradient */
@@ -701,6 +667,7 @@ section {
   font-size: 14px !important;
   margin-bottom: 16px !important;
   display: -webkit-box !important;
+  line-clamp: 2 !important;
   -webkit-line-clamp: 2 !important;
   -webkit-box-orient: vertical !important;
   overflow: hidden !important;

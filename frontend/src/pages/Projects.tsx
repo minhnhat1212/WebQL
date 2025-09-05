@@ -111,12 +111,9 @@ const Projects: React.FC = () => {
   const canEdit = (project: any) => user?.role === 'admin' || project.leader?._id === user?.id;
 
 
-  // Hàm mở modal thành viên - chuyển đến trang Members
-  const openMemberModal = async (project: any) => {
-    // Lưu project được chọn vào localStorage để trang Members có thể sử dụng
-    localStorage.setItem('selectedProjectForMembers', JSON.stringify(project));
-    // Chuyển đến trang Members
-    navigate('/members');
+  // Điều hướng đến trang chi tiết dự án để quản lý thành viên và task
+  const goToProjectDetail = (project: any) => {
+    navigate(`/projects/${project._id}`);
   };
 
   // Hàm mở modal task
@@ -308,21 +305,23 @@ const Projects: React.FC = () => {
             </Text>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              style={{
-                background: '#6366f1',
-                border: 'none',
-                borderRadius: '8px',
-                height: '36px',
-                fontSize: '14px',
-                fontWeight: '500'
-              }}
-              onClick={() => openModal()}
-            >
-              Thêm dự án
-            </Button>
+            {user?.role !== 'member' && (
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                style={{
+                  background: '#6366f1',
+                  border: 'none',
+                  borderRadius: '8px',
+                  height: '36px',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}
+                onClick={() => openModal()}
+              >
+                Thêm dự án
+              </Button>
+            )}
           </div>
         </div>
 
@@ -373,19 +372,21 @@ const Projects: React.FC = () => {
             <Text style={{ fontSize: '18px', color: '#64748b', marginBottom: '24px', display: 'block' }}>
               Chưa có dự án nào
             </Text>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              size="large"
-              onClick={() => openModal()}
-              style={{
-                background: '#6366f1',
-                border: 'none',
-                borderRadius: '8px'
-              }}
-            >
-              Tạo dự án đầu tiên
-            </Button>
+            {user?.role !== 'member' && (
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                size="large"
+                onClick={() => openModal()}
+                style={{
+                  background: '#6366f1',
+                  border: 'none',
+                  borderRadius: '8px'
+                }}
+              >
+                Tạo dự án đầu tiên
+              </Button>
+            )}
           </div>
         ) : (
           <Row gutter={[24, 24]}>
@@ -439,12 +440,12 @@ const Projects: React.FC = () => {
                       style={{ color: '#10b981' }}
                       onClick={(e) => {
                         e.stopPropagation();
-                        openMemberModal(project);
+                        goToProjectDetail(project);
                       }}
                       title="Quản lý thành viên"
                     />
                   ].filter(Boolean)}
-                  // onClick={() => switchToDetail(project)}
+                  onClick={() => goToProjectDetail(project)}
                 >
                   <div style={{ marginBottom: '16px' }}>
                     <Title level={4} style={{ margin: 0, color: '#23272f', fontSize: '18px' }}>
@@ -537,7 +538,7 @@ const Projects: React.FC = () => {
                           }}
                           onClick={(e) => {
                             e.stopPropagation();
-                            openMemberModal(project);
+                            goToProjectDetail(project);
                           }}
                         />
                       </Tooltip>
